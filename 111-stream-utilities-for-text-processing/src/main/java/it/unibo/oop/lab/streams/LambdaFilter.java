@@ -7,8 +7,12 @@ import java.awt.GridLayout;
 import java.awt.LayoutManager;
 import java.awt.Toolkit;
 import java.io.Serial;
+import java.util.Arrays;
+import java.util.Map;
 import java.util.Objects;
 import java.util.function.Function;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -36,12 +40,26 @@ public final class LambdaFilter extends JFrame {
 
     @Serial
     private static final long serialVersionUID = 1760990730218643730L;
+    private static final String ANY_NON_WORD = "(\\s|\\p{Punct})+";
 
     private enum Command {
         /**
          * Commands.
          */
-        IDENTITY("No modifications", Function.identity());
+        IDENTITY("No modifications", Function.identity()),
+        TO_LOWERCASE("Everything in lowercase", String::toLowerCase),
+        COUNT_CHARS("Count number of chars", f-> Integer.toString(f.length())),
+        COUNT_NUMBER_OF_LINE("Count the number of lines", f-> Long.toString(f.lines().count())),
+        ALPHABETICAL_ORDER("List all the word in alphabetical order", 
+            f -> Arrays.stream(f.split(ANY_NON_WORD)).sorted().collect(Collectors.joining("\n"))
+        ),
+        COUNT_FOR_EACH_WORD("Count the occurrency of each word", 
+            f -> Arrays.stream(f.split(ANY_NON_WORD))
+                .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()))
+                .entrySet().stream()
+                .map(t -> t.getKey()+ " : " +t.getValue())
+                .collect(Collectors.joining("\n"))
+        );
 
         private final String commandName;
         private final Function<String, String> fun;
